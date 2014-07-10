@@ -1,9 +1,9 @@
 GO=go
 
-goagainst: $(SRCS)
+goagainst:
 	$(GO) build -o goagainst ./src
 
 clean:
 	rm -f goagainst
 
-.PHONY: clean
+.PHONY: clean goagainst

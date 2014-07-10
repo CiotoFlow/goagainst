@@ -6,6 +6,10 @@ import (
 )
 
 func main() {
-	tok := trollan.NextToken()
-	fmt.Println(tok)
+	l := trollan.NewLexer (nil)
+	cp := new(trollan.Lexer)
+	*cp = *l
+	l.NextToken()
+	fmt.Println(l.Offset)
+	fmt.Println(cp.Offset)
 }

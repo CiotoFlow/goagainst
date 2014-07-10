@@ -17,9 +17,17 @@ func NewLexer(r *bufio.Reader) *Lexer {
 	return &Lexer{r, Pos{0,0,0}}
 }
 
+type TokenType int;
+
+const (
+      EOF TokenType = iota
+      ID
+)
+
 type Token struct {
 	Pos
 	Val interface{}
+	Type TokenType
 }
 
 func (l *Lexer) NextToken() (tok *Token, err error) {

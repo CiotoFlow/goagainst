@@ -2,14 +2,15 @@ package main
 
 import (
 	"fmt"
+	"strings"
+	"bufio"
 	"./trollan"
 )
 
 func main() {
-	l := trollan.NewLexer (nil)
-	cp := new(trollan.Lexer)
-	*cp = *l
-	l.NextToken()
-	fmt.Println(l.Offset)
-	fmt.Println(cp.Offset)
+	buf := strings.NewReader("test test")
+	l := trollan.NewLexer (bufio.NewReader(buf))
+	tok, _ := l.NextToken()
+	fmt.Println(l)
+	fmt.Println(tok)
 }

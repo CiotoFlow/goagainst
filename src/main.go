@@ -13,4 +13,7 @@ func main() {
 	tok, _ := l.NextToken()
 	fmt.Println(l)
 	fmt.Println(tok)
+	tok, _ = l.NextToken()
+	fmt.Println(l)
+	fmt.Println(tok)
 }

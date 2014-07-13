@@ -1,6 +1,7 @@
 package trollan
 
 import "bufio"
+import "unicode"
 //import "fmt"
 
 type Pos struct {
@@ -12,11 +13,11 @@ type Pos struct {
 type Lexer struct {
 	*bufio.Reader
 	pos Pos
-	ahead []byte
+	ahead []rune
 }
 
 func NewLexer(r *bufio.Reader) *Lexer {
-	return &Lexer{r, Pos{0,0,0}, make([]byte, 0)}
+	return &Lexer{r, Pos{0,0,0}, make([]rune, 0)}
 }
 
 type TokenType int;
@@ -36,7 +37,7 @@ type Token struct {
 
 func (l *Lexer) skipSpaces() {
 	for {
-		b, err := l.nextByte ()
+		b, err := l.nextRune ()
 		if err != nil {
 			return
 		}
@@ -45,52 +46,46 @@ func (l *Lexer) skipSpaces() {
 			break
 		}
 
-		if b != 0x20 {
+		if !unicode.IsSpace (b) {
 			l.ahead = append (l.ahead, b)
 			break
 		}
 	}
 }
 
-func (l *Lexer) nextByte() (b byte, err error) {
+func (l *Lexer) nextRune() (b rune, err error) {
 	if len(l.ahead) > 0 {
 		b = l.ahead[0]
 		err = nil
 		l.ahead = l.ahead[1:]
 	} else {
-		b, err = l.ReadByte()
+		b, _, err = l.ReadRune()
 	}
 	return
 }
 
-func isAlpha(b byte) bool {
-	return (b >= 0x41 && b <= 0x5a) ||
-			(b >= 61 && b <= 0x7a) ||
-			(b == 0x5f)
-}
-
 func (l *Lexer) NextToken() (tok *Token, err error) {
 	tok = new(Token)
-	var b byte
+	var b rune
 
 	l.skipSpaces()
 
-	b, err = l.nextByte ()
+	b, err = l.nextRune ()
 	if err != nil {
 		return
 	}
 
-	if isAlpha(b) {
-		strTok := make([]byte, 30)
+	if unicode.IsLetter(b) {
+		strTok := make([]rune, 30)
 		tok.Pos = l.pos
 		for {
 			strTok = append(strTok, b);
 			l.pos.Offset++
 
-			b, err = l.nextByte()
+			b, err = l.nextRune()
 			if b == 0 || err != nil {
 				break
-			} else if !isAlpha(b) {
+			} else if !(unicode.IsLetter(b) || b == '_' || unicode.IsDigit(b)) {
 				l.ahead = append(l.ahead, b)
 				break
 			}

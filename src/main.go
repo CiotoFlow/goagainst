@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	buf := strings.NewReader("test test")
+	buf := strings.NewReader("test_test test123")
 	l := trollan.NewLexer (bufio.NewReader(buf))
 	tok, _ := l.NextToken()
 	fmt.Println(l)

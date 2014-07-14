@@ -2,6 +2,7 @@ package trollan
 
 import "bufio"
 import "unicode"
+import "io"
 //import "fmt"
 
 type Pos struct {
@@ -23,10 +24,10 @@ func NewLexer(r *bufio.Reader) *Lexer {
 type TokenType int;
 
 const (
-	EOF TokenType = iota
-	ID
-	STR
-	FLOAT
+	TOK_EOF TokenType = iota
+	TOK_ID
+	TOK_STR
+	TOK_FLOAT
 )
 
 type Token struct {
@@ -65,7 +66,16 @@ func (l *Lexer) nextRune() (b rune, err error) {
 }
 
 func (l *Lexer) NextToken() (tok *Token, err error) {
+	tok, err = l.nextTokenReal()
+	if err == io.EOF {
+		err = nil
+	}
+	return
+}
+
+func (l *Lexer) nextTokenReal() (tok *Token, err error) {
 	tok = new(Token)
+	tok.Type = TOK_EOF
 	var b rune
 
 	l.skipSpaces()
@@ -90,7 +100,7 @@ func (l *Lexer) NextToken() (tok *Token, err error) {
 				break
 			}
 		}
-		tok.Type = ID
+		tok.Type = TOK_ID
 		tok.Val = string(strTok)
 	}
 

@@ -6,4 +6,7 @@ goagainst:
 clean:
 	rm -f goagainst
 
-.PHONY: clean goagainst
+check:
+	go test ./src/trollan
+
+.PHONY: clean goagainst check

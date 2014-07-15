@@ -4,6 +4,8 @@
  *   https://tools.ietf.org/html/rfc2811
  *   https://tools.ietf.org/html/rfc2812
  *   https://tools.ietf.org/html/rfc2813
+ *
+ * https://www.alien.net.au/irc/irc2numerics.html
  */
 package irc
 

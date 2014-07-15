@@ -32,13 +32,13 @@ type IRC struct {
 	sock net.Conn
 	r *textproto.Reader
 	w *textproto.Writer
-	chanSubscribers [](chan *IrcMsg)
+	chanSubscribers [](chan *Message)
 	callbackSubscribers [](IrcCallback)
 }
 
-type IrcCallback func(msg *IrcMsg);
+type IrcCallback func(msg *Message);
 
-type IrcMsg struct {
+type Message struct {
 	Type string
 	From *string
 	To *string
@@ -49,7 +49,7 @@ func NewIRC(config ServerConfig) *IRC {
 	return &IRC { config: config }
 }
 
-func (irc *IRC) NotifyChan(c chan *IrcMsg) {
+func (irc *IRC) NotifyChan(c chan *Message) {
 	irc.chanSubscribers = append(irc.chanSubscribers, c)
 }
 
@@ -61,7 +61,7 @@ func (irc *IRC) Send(format string, a ...interface{}) error {
 	return irc.w.PrintfLine(format, a...)
 }
 
-func (irc *IRC) notify(cmd *IrcMsg) {
+func (irc *IRC) notify(cmd *Message) {
 	for _, c := range irc.chanSubscribers {
 		c <- cmd
 	}
@@ -122,7 +122,7 @@ func (irc *IRC) Loop() error {
 		} else if (cmd == "443") {
 			/* Duplicated NICK */
 		} else {
-			cmd := IrcMsg { cmd, from, to, content }
+			cmd := Message { cmd, from, to, content }
 			irc.notify(&cmd)
 		}
 

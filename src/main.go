@@ -7,7 +7,7 @@ import (
 )
 
 func testNotify(client *irc.IRC) {
-	c := make(chan *irc.IrcMsg)
+	c := make(chan *irc.Message)
 	client.NotifyChan(c)
 	for {
 		msg := <- c
@@ -15,7 +15,7 @@ func testNotify(client *irc.IRC) {
 	}
 }
 
-func testCallback(client *irc.IRC, msg *irc.IrcMsg) {
+func testCallback(client *irc.IRC, msg *irc.Message) {
 	fmt.Println(msg)
 }
 
@@ -41,7 +41,7 @@ func main() {
 		}
 
 		go testNotify(client)
-		client.NotifyCallback(func(msg *irc.IrcMsg) { testCallback (client, msg); });
+		client.NotifyCallback(func(msg *irc.Message) { testCallback (client, msg); });
 		
 		go func(idx int) {
 			client.Loop()

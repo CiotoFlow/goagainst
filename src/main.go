@@ -28,14 +28,14 @@ func main() {
 			continue
 		}
 
-		go func() {
+		go func(idx int) {
 			client.Loop()
 			if (err != nil) {
 				fmt.Println(err)
 				client.Disconnect()
 			}
-			quitChans[i] <- true
-		}()
+			quitChans[idx] <- true
+		}(i)
 
 		i++
 	}

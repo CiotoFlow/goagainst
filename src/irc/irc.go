@@ -30,6 +30,8 @@ type IRC struct {
 	channel string
 	useTls bool
 	sock net.Conn
+	r *textproto.Reader
+	w *textproto.Writer
 }
 
 func NewIRC(nick, server, channel string, useTls bool) *IRC {
@@ -49,19 +51,15 @@ func (irc *IRC) AddCallback() error {
 func (irc *IRC) Loop() error {
 	var cmd string
 
-	/* TODO: try to use textproto.Dial */
-	r := textproto.NewReader(bufio.NewReader(irc.sock))
-	w := textproto.NewWriter(bufio.NewWriter(irc.sock))
-
 	if (!irc.conn) {
 		return errors.New("not connected")
 	}
 
-	w.PrintfLine("NICK %s", irc.nick)
-	w.PrintfLine("USER %s 0 * :Stocazzo", irc.nick)
+	irc.w.PrintfLine("NICK %s", irc.nick)
+	irc.w.PrintfLine("USER %s 0 * :Stocazzo", irc.nick)
 
 	for {
-		line, err := r.ReadLine()
+		line, err := irc.r.ReadLine()
 		if err != nil {
 			return err
 		}
@@ -78,9 +76,9 @@ func (irc *IRC) Loop() error {
 		}
 
 		if (cmd == "PING") {
-			w.PrintfLine("PONG %s", resp[1])
+			irc.w.PrintfLine("PONG %s", resp[1])
 		} else if (cmd == "001") {
-			w.PrintfLine("JOIN %s", irc.channel)
+			irc.w.PrintfLine("JOIN %s", irc.channel)
 		} else if (cmd == "443") {
 			/* Duplicated NICK */
 		} else if (cmd == "PRIVMSG") {
@@ -94,7 +92,7 @@ func (irc *IRC) Loop() error {
 }
 
 func (irc *IRC) Disconnect() {
-	/* XXX TODO: send QUIT? */
+	irc.w.PrintfLine("QUIT against")
 	irc.sock.Close()
 }
 
@@ -113,6 +111,8 @@ func (irc *IRC) Connect() error {
 
 	if (err == nil) {
 		irc.conn = true
+		irc.r = textproto.NewReader(bufio.NewReader(irc.sock))
+		irc.w = textproto.NewWriter(bufio.NewWriter(irc.sock))		
 	}
 
 	return err

@@ -18,7 +18,7 @@ import (
 )
 
 const (
-        IRC_EVENT_NICK = 0
+	IRC_EVENT_NICK = 0
 	IRC_EVENT_PRIV_MSG = 1
 	/* TODO: define more... */
 )
@@ -50,18 +50,22 @@ func (irc *IRC) Loop() error {
 	var cmd string
 
 	/* TODO: try to use textproto.Dial */
-	reader := bufio.NewReader(irc.sock)
-	tp := textproto.NewReader(reader)
+	r := textproto.NewReader(bufio.NewReader(irc.sock))
+	w := textproto.NewWriter(bufio.NewWriter(irc.sock))
 
 	if (!irc.conn) {
 		return errors.New("not connected")
 	}
 
-	irc.sock.Write([]byte("NICK " + irc.nick + "\r\n"))
-	irc.sock.Write([]byte("USER " + irc.nick + " 0 * :Stocazzo\r\n"))
+	w.PrintfLine("NICK %s", irc.nick)
+	w.PrintfLine("USER %s 0 * :Stocazzo", irc.nick)
 
 	for {
-		line, _ := tp.ReadLine()
+		line, err := r.ReadLine()
+		if err != nil {
+			return err
+		}
+		
 		fmt.Println(line)
 
 		resp := strings.Split(line, " ")
@@ -74,9 +78,9 @@ func (irc *IRC) Loop() error {
 		}
 
 		if (cmd == "PING") {
-			irc.sock.Write([]byte("PONG " + resp[1] + "\r\n"))
+			w.PrintfLine("PONG %s", resp[1])
 		} else if (cmd == "001") {
-			irc.sock.Write([]byte("JOIN " + irc.channel + "\r\n"))
+			w.PrintfLine("JOIN %s", irc.channel)
 		} else if (cmd == "443") {
 			/* Duplicated NICK */
 		} else if (cmd == "PRIVMSG") {

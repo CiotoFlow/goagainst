@@ -65,7 +65,7 @@ func (irc *IRC) NotifyCallback(cb IrcCallback) {
 }
 
 func (irc *IRC) Send(format string, a ...interface{}) error {
-	return irc.w.PrintfLine(format, a)
+	return irc.w.PrintfLine(format, a...)
 }
 
 func (irc *IRC) notify(cmd *IrcMsg) {
@@ -84,8 +84,8 @@ func (irc *IRC) Loop() error {
 		return errors.New("not connected")
 	}
 
-	irc.w.PrintfLine("NICK %s", irc.nick)
-	irc.w.PrintfLine("USER %s 0 * :Stocazzo", irc.nick)
+	irc.Send("NICK %s", irc.nick)
+	irc.Send("USER %s 0 * :Stocazzo", irc.nick)
 
 	for {
 		line, err := irc.r.ReadLine()
@@ -105,9 +105,9 @@ func (irc *IRC) Loop() error {
 		}
 
 		if (cmd == "PING") {
-			irc.w.PrintfLine("PONG %s", resp[1])
+			irc.Send("PONG %s", resp[1])
 		} else if (cmd == "001") {
-			irc.w.PrintfLine("JOIN %s", irc.channel)
+			irc.Send("JOIN %s", irc.channel)
 		} else if (cmd == "443") {
 			/* Duplicated NICK */
 		} else {
@@ -122,7 +122,7 @@ func (irc *IRC) Loop() error {
 }
 
 func (irc *IRC) Disconnect() {
-	irc.w.PrintfLine("QUIT against")
+	irc.Send("QUIT against")
 	irc.sock.Close()
 }
 

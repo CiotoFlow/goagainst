@@ -1,0 +1,26 @@
+* Union / Sum types
+
+http://www.jerf.org/iri/post/2917
+
+* Entitità
+
+type Entity interface {
+	Name() string
+	isEntity()
+}
+
+Non si lavora per nickname, o nomi di channel, ma per entità.
+In questo modo, se un utente cambia nick, viene cambiato in un solo posto.
+
+* NotifyChannel
+
+Invece di usare callbacks per ogni comando, IRC ha un array di channels []chan Command.
+Quindi un metodo NotifyChannel(chan Command). Quando viene parsato un comando, si cicla
+l'array dei chan e si fa c <- command
+
+type Command interface {
+	FromEntity() *Entity
+	ToEntity() *Entity
+	isCommand()
+}
+

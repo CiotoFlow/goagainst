@@ -40,9 +40,9 @@ type IrcCallback func(msg *IrcMsg);
 
 type IrcMsg struct {
 	Type string
-	From string
+	From *string
 	To *string
-	Content string
+	Content *string
 }
 
 func NewIRC(config ServerConfig) *IRC {
@@ -90,16 +90,30 @@ func (irc *IRC) Loop() error {
 
 		resp := strings.Split(line, " ")
 
-		/* XXX: handle better */
+		var from *string
+		var to *string
+		var content *string
+		
+		/* FIXME: */
 		if (resp[0][0] == ':' && len(resp) > 1) {
 			cmd = resp[1]
+			from = &resp[0]
+			to = &resp[2]
+			if len(resp) >= 4 {
+				content = &resp[3]
+			} else {
+				content = nil
+			}
 		} else {
 			cmd = resp[0]
+			from = nil
+			to = nil
+			content = &resp[1]
 		}
 
 		if (cmd == "PING") {
 			if irc.config.AutoPing {
-				irc.Send("PONG %s", resp[1])
+				irc.Send("PONG %s", *content)
 			}
 		} else if (cmd == "001") {
 			for _, name := range irc.config.AutoJoin {
@@ -108,7 +122,7 @@ func (irc *IRC) Loop() error {
 		} else if (cmd == "443") {
 			/* Duplicated NICK */
 		} else {
-			cmd := IrcMsg { cmd, "", nil, "" }
+			cmd := IrcMsg { cmd, from, to, content }
 			irc.notify(&cmd)
 		}
 

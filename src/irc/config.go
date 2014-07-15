@@ -1,4 +1,4 @@
-package main
+package irc
 
 import (
 	"encoding/json"
@@ -8,7 +8,8 @@ import (
 type ServerConfig struct {
 	Address string
 	Nickname string
-	Channel string
+	AutoJoin []string
+	AutoPing bool
 	UseTls bool
 }
 

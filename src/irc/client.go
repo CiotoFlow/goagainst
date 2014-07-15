@@ -26,11 +26,9 @@ const (
 )
 
 type IRC struct {
+	config ServerConfig
+	
 	conn bool
-	nick string
-	server string
-	channel string
-	useTls bool
 	sock net.Conn
 	r *textproto.Reader
 	w *textproto.Writer
@@ -47,13 +45,8 @@ type IrcMsg struct {
 	Content string
 }
 
-func NewIRC(nick, server, channel string, useTls bool) *IRC {
-	return &IRC {
-		nick: nick,
-		server: server,
-		channel: channel,
-		useTls: useTls,
-	}
+func NewIRC(config ServerConfig) *IRC {
+	return &IRC { config: config }
 }
 
 func (irc *IRC) NotifyChan(c chan *IrcMsg) {
@@ -84,8 +77,8 @@ func (irc *IRC) Loop() error {
 		return errors.New("not connected")
 	}
 
-	irc.Send("NICK %s", irc.nick)
-	irc.Send("USER %s 0 * :Stocazzo", irc.nick)
+	irc.Send("NICK %s", irc.config.Nickname)
+	irc.Send("USER %s 0 * :Stocazzo", irc.config.Nickname)
 
 	for {
 		line, err := irc.r.ReadLine()
@@ -105,9 +98,13 @@ func (irc *IRC) Loop() error {
 		}
 
 		if (cmd == "PING") {
-			irc.Send("PONG %s", resp[1])
+			if irc.config.AutoPing {
+				irc.Send("PONG %s", resp[1])
+			}
 		} else if (cmd == "001") {
-			irc.Send("JOIN %s", irc.channel)
+			for _, name := range irc.config.AutoJoin {
+				irc.Send("JOIN %s", name)
+			}
 		} else if (cmd == "443") {
 			/* Duplicated NICK */
 		} else {
@@ -133,10 +130,10 @@ func (irc *IRC) Connect() error {
 		return errors.New("already connected")
 	}
 
-	if (irc.useTls) {
-		irc.sock, err = tls.Dial("tcp", irc.server, &tls.Config{InsecureSkipVerify: true})
+	if (irc.config.UseTls) {
+		irc.sock, err = tls.Dial("tcp", irc.config.Address, &tls.Config{InsecureSkipVerify: true})
 	} else {
-		irc.sock, err = net.Dial("tcp", irc.server)
+		irc.sock, err = net.Dial("tcp", irc.config.Address)
 	}
 
 	if (err == nil) {

@@ -22,7 +22,7 @@ func testCallback(client *irc.IRC, msg *irc.IrcMsg) {
 func main() {
 	flag.Parse ()
 
-	config, err := LoadConfig(flag.Arg(0))
+	config, err := irc.LoadConfig(flag.Arg(0))
 	if err != nil {
 		fmt.Println (err)
 		return
@@ -32,9 +32,7 @@ func main() {
 
 	i := 0
 	for _, server := range config.Servers {
-		client := irc.NewIRC(server.Nickname, server.Address,
-							 server.Channel, server.UseTls)
-		
+		client := irc.NewIRC(server)
 
 		err := client.Connect()
 		if (err != nil) {

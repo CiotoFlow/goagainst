@@ -2,39 +2,45 @@ package main
 
 import (
 	"fmt"
-	"strings"
-	"bufio"
-	"./trollan"
+	"flag"
 	"./irc"
 )
 
-func testIRC() {
-	client := irc.NewIRC("goagainst", "ai.irc.mufhd0.net:9999",
-			     "#ciotoflow", true)
-
-	err := client.Connect()
-	if (err != nil) {
-		fmt.Println(err)
-		return
-	}
-
-	err = client.Loop()
-	if (err != nil) {
-		fmt.Println(err)
-		client.Disconnect()
-		return
-	}
-}
-
 func main() {
-	buf := strings.NewReader("test_test test123")
-	l := trollan.NewLexer (bufio.NewReader(buf))
-	tok, _ := l.NextToken()
-	fmt.Println(l)
-	fmt.Println(tok)
-	tok, _ = l.NextToken()
-	fmt.Println(l)
-	fmt.Println(tok)
+	flag.Parse ()
 
-	testIRC()
+	config, err := LoadConfig(flag.Arg(0))
+	if err != nil {
+		fmt.Println (err)
+		return
+	}
+
+	quitChans := make([]chan bool, len(config.Servers));
+
+	i := 0
+	for _, server := range config.Servers {
+		client := irc.NewIRC(server.Nickname, server.Address,
+							 server.Channel, server.UseTls)
+
+		err := client.Connect()
+		if (err != nil) {
+			fmt.Println(err)
+			continue
+		}
+
+		go func() {
+			client.Loop()
+			if (err != nil) {
+				fmt.Println(err)
+				client.Disconnect()
+			}
+			quitChans[i] <- true
+		}()
+
+		i++
+	}
+
+	for i = 0; i < len(config.Servers); i++ {
+		<- quitChans[i]
+	}
 }

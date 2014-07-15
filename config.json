@@ -1,0 +1,8 @@
+{
+	"Servers": [
+		{ "Address": "irc.autistici.org:9999",
+		  "Nickname": "goagainst",
+		  "Channel": "#ciotoflow",
+		  "UseTls": true }
+	]
+}

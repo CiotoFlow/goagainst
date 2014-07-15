@@ -34,6 +34,17 @@ type IRC struct {
 	sock net.Conn
 	r *textproto.Reader
 	w *textproto.Writer
+	chanSubscribers [](chan *IrcMsg)
+	callbackSubscribers [](IrcCallback)
+}
+
+type IrcCallback func(msg *IrcMsg);
+
+type IrcMsg struct {
+	Type string
+	From string
+	To *string
+	Content string
 }
 
 func NewIRC(nick, server, channel string, useTls bool) *IRC {
@@ -45,9 +56,25 @@ func NewIRC(nick, server, channel string, useTls bool) *IRC {
 	}
 }
 
-func (irc *IRC) AddCallback() error {
-	/* TODO */
-	return nil
+func (irc *IRC) NotifyChan(c chan *IrcMsg) {
+	irc.chanSubscribers = append(irc.chanSubscribers, c)
+}
+
+func (irc *IRC) NotifyCallback(cb IrcCallback) {
+	irc.callbackSubscribers = append(irc.callbackSubscribers, cb)
+}
+
+func (irc *IRC) Send(format string, a ...interface{}) error {
+	return irc.w.PrintfLine(format, a)
+}
+
+func (irc *IRC) notify(cmd *IrcMsg) {
+	for _, c := range irc.chanSubscribers {
+		c <- cmd
+	}
+	for _, c := range irc.callbackSubscribers {
+		c(cmd)
+	}
 }
 
 func (irc *IRC) Loop() error {
@@ -83,8 +110,9 @@ func (irc *IRC) Loop() error {
 			irc.w.PrintfLine("JOIN %s", irc.channel)
 		} else if (cmd == "443") {
 			/* Duplicated NICK */
-		} else if (cmd == "PRIVMSG") {
-			/* TODO */
+		} else {
+			cmd := IrcMsg { cmd, "", nil, "" }
+			irc.notify(&cmd)
 		}
 
 		/* TODO: add more commands */

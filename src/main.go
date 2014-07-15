@@ -6,6 +6,19 @@ import (
 	"./irc"
 )
 
+func testNotify(client *irc.IRC) {
+	c := make(chan *irc.IrcMsg)
+	client.NotifyChan(c)
+	for {
+		msg := <- c
+		fmt.Println(msg)
+	}
+}
+
+func testCallback(client *irc.IRC, msg *irc.IrcMsg) {
+	fmt.Println(msg)
+}
+
 func main() {
 	flag.Parse ()
 
@@ -21,6 +34,7 @@ func main() {
 	for _, server := range config.Servers {
 		client := irc.NewIRC(server.Nickname, server.Address,
 							 server.Channel, server.UseTls)
+		
 
 		err := client.Connect()
 		if (err != nil) {
@@ -28,6 +42,9 @@ func main() {
 			continue
 		}
 
+		go testNotify(client)
+		client.NotifyCallback(func(msg *irc.IrcMsg) { testCallback (client, msg); });
+		
 		go func(idx int) {
 			client.Loop()
 			if (err != nil) {

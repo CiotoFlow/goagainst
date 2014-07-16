@@ -86,7 +86,7 @@ func (irc *IRC) registerNick() {
 	nick := irc.config.Nickname
 	reg := func() {
 		irc.Send("NICK %s", nick)
-		irc.Send("USER %s 0 * :Stocazzo", nick)
+		irc.Send("USER %s 0 * :%s", nick, irc.config.Realname)
 	}
 
 	c := irc.StartMachine()

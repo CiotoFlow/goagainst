@@ -8,6 +8,7 @@ import (
 type ServerConfig struct {
 	Address string
 	Nickname string
+	Realname string
 	AutoJoin []string
 	AutoPong bool
 	UseTls bool

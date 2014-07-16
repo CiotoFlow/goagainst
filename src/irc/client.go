@@ -20,6 +20,8 @@ import (
 
 type IRC struct {
 	config ServerConfig
+	Nickname string
+	Mode string
 
 	conn bool
 	sock net.Conn
@@ -97,7 +99,9 @@ func (irc *IRC) registerNick() {
 			nick = nick+"_"
 			reg()
 		} else if msg.Command == "MODE" && msg.Prefix == nick && msg.Params[0] == nick {
-			fmt.Println("Registered as", nick)
+			irc.Nickname = nick
+			irc.Mode = msg.Trailing
+			fmt.Println("Registered as", irc.Nickname, "with mode", irc.Mode)
 			break
 		}
 	}

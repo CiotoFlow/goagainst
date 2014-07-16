@@ -18,12 +18,6 @@ import (
 	"net"
 )
 
-const (
-	IRC_EVENT_NICK = 0
-	IRC_EVENT_PRIV_MSG = 1
-	/* TODO: define more... */
-)
-
 type IRC struct {
 	config ServerConfig
 
@@ -121,6 +115,7 @@ func (irc *IRC) autoJoin() {
 			for _, name := range irc.config.AutoJoin {
 				irc.Send("JOIN %s", name)
 			}
+			break
 		}
 	}
 }

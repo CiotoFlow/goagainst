@@ -113,7 +113,7 @@ func (irc *IRC) registerNick() {
 func (irc *IRC) autoJoin() {
 	c := irc.StartMachine()
 	defer irc.StopMachine(c)
-	
+
 	for {
 		msg := <- c
 		if msg.Command == "001" {

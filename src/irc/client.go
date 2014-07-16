@@ -62,7 +62,7 @@ func (irc *IRC) notify(cmd *Message) {
 	}
 }
 
-func registerNick(irc *IRC) {
+func (irc *IRC) registerNick() {
 	irc.Send("NICK %s", irc.config.Nickname)
 	irc.Send("USER %s 0 * :Stocazzo", irc.config.Nickname)
 }
@@ -89,26 +89,29 @@ func (irc *IRC) Loop() error {
 			continue
 		}
 
-		switch msg.Command {
-		case "PING":
-			if irc.config.AutoPing {
-				irc.Send("PONG %s", msg.Trailing)
-			}
-		case "001":
-			/* Welcome */
-			for _, name := range irc.config.AutoJoin {
-				irc.Send("JOIN %s", name)
-			}
-		case "443":
-			/* Duplicated NICK */
-			irc.config.Nickname = irc.config.Nickname + "_"
-			irc.registerNick();
-		}
-		
+		irc.handleMessage(msg)
 		irc.notify(msg)
 	}
 
 	return nil
+}
+
+func (irc *IRC) handleMessage(msg *Message) {
+	switch msg.Command {
+	case "PING":
+		if irc.config.AutoPing {
+			irc.Send("PONG %s", msg.Trailing)
+		}
+	case "001":
+		/* Welcome */
+		for _, name := range irc.config.AutoJoin {
+			irc.Send("JOIN %s", name)
+		}
+	case "443":
+		/* Duplicated NICK */
+		irc.config.Nickname = irc.config.Nickname + "_"
+		irc.registerNick();
+	}
 }
 
 func (irc *IRC) Disconnect() {

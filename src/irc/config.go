@@ -9,7 +9,7 @@ type ServerConfig struct {
 	Address string
 	Nickname string
 	AutoJoin []string
-	AutoPing bool
+	AutoPong bool
 	UseTls bool
 }
 

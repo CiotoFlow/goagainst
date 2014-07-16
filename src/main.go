@@ -6,19 +6,6 @@ import (
 	"./irc"
 )
 
-func testNotify(client *irc.IRC) {
-	c := make(chan *irc.Message)
-	client.NotifyChan(c)
-	for {
-		msg := <- c
-		fmt.Println(msg)
-	}
-}
-
-func testCallback(client *irc.IRC, msg *irc.Message) {
-	fmt.Println(msg)
-}
-
 func main() {
 	flag.Parse ()
 
@@ -44,9 +31,6 @@ func main() {
 			fmt.Println(err)
 			continue
 		}
-
-		go testNotify(client)
-		client.NotifyCallback(func(msg *irc.Message) { testCallback (client, msg); });
 
 		go func(idx int) {
 			client.Loop()

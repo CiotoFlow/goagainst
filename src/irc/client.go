@@ -32,20 +32,25 @@ type IRC struct {
 	r *textproto.Reader
 	w *textproto.Writer
 	chanSubscribers [](chan *Message)
-	callbackSubscribers [](IrcCallback)
+	callbackSubscribers [](*func(*Message))
 }
-
-type IrcCallback func(msg *Message);
 
 func NewIRC(config ServerConfig) *IRC {
 	return &IRC { config: config }
 }
 
-func (irc *IRC) NotifyChan(c chan *Message) {
-	irc.chanSubscribers = append(irc.chanSubscribers, c)
+func (irc *IRC) RemoveCallback(c *func(*Message)) {
+	// FIXME: lock
+	for i, cc := range irc.callbackSubscribers {
+		if cc == c {
+			irc.callbackSubscribers[i] = irc.callbackSubscribers[len(irc.callbackSubscribers)-1]
+			irc.callbackSubscribers = irc.callbackSubscribers[0:len(irc.callbackSubscribers)-1]
+			break
+		}
+	}
 }
 
-func (irc *IRC) NotifyCallback(cb IrcCallback) {
+func (irc *IRC) NotifyCallback(cb *func(*Message)) {
 	irc.callbackSubscribers = append(irc.callbackSubscribers, cb)
 }
 
@@ -58,13 +63,60 @@ func (irc *IRC) notify(cmd *Message) {
 		c <- cmd
 	}
 	for _, c := range irc.callbackSubscribers {
-		c(cmd)
+		(*c)(cmd)
+	}
+}
+
+func (irc *IRC) StartMachine() chan *Message {
+	c := make(chan *Message, 1000)
+	// FIXME: lock
+	irc.chanSubscribers = append(irc.chanSubscribers, c)
+	return c
+}
+
+func (irc *IRC) StopMachine(c chan *Message) {
+	// FIXME: lock
+	for i, cc := range irc.chanSubscribers {
+		if cc == c {
+			irc.chanSubscribers[i] = irc.chanSubscribers[len(irc.chanSubscribers)-1]
+			irc.chanSubscribers = irc.chanSubscribers[0:len(irc.chanSubscribers)-1]
+			break
+		}
 	}
 }
 
 func (irc *IRC) registerNick() {
-	irc.Send("NICK %s", irc.config.Nickname)
-	irc.Send("USER %s 0 * :Stocazzo", irc.config.Nickname)
+	// register nick until it's not duplicated
+	nick := irc.config.Nickname
+	reg := func() {
+		irc.Send("NICK %s", nick)
+		irc.Send("USER %s 0 * :Stocazzo", nick)
+	}
+
+	c := irc.StartMachine()
+	reg()
+	for {
+		msg := <- c
+		if msg.Command == "443" {
+			nick = nick+"_"
+			reg()
+		} else if msg.Command == "MODE" && msg.Prefix == nick && msg.Params[0] == nick {
+			fmt.Println("Registered as", nick)
+			break
+		}
+	}
+	irc.StopMachine(c)
+}
+
+func (irc *IRC) autoPong() {
+	// register nick until it's not duplicated
+	f := func(msg *Message) {
+		if msg.Command == "PING" {
+			irc.Send("PONG %s", msg.Trailing)
+		}
+	}
+	
+	irc.NotifyCallback (&f)
 }
 
 func (irc *IRC) Loop() error {
@@ -73,7 +125,11 @@ func (irc *IRC) Loop() error {
 		return errors.New("not connected")
 	}
 
-	irc.registerNick();
+	go irc.registerNick()
+	if irc.config.AutoPong {
+		go irc.autoPong()
+	}
+	
 
 	for {
 		line, err := irc.r.ReadLine()
@@ -98,19 +154,11 @@ func (irc *IRC) Loop() error {
 
 func (irc *IRC) handleMessage(msg *Message) {
 	switch msg.Command {
-	case "PING":
-		if irc.config.AutoPing {
-			irc.Send("PONG %s", msg.Trailing)
-		}
 	case "001":
 		/* Welcome */
 		for _, name := range irc.config.AutoJoin {
 			irc.Send("JOIN %s", name)
 		}
-	case "443":
-		/* Duplicated NICK */
-		irc.config.Nickname = irc.config.Nickname + "_"
-		irc.registerNick();
 	}
 }
 

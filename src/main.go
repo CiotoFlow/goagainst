@@ -22,7 +22,12 @@ func testCallback(client *irc.IRC, msg *irc.Message) {
 func main() {
 	flag.Parse ()
 
-	config, err := irc.LoadConfig(flag.Arg(0))
+	configFile := "config.json";
+	if flag.NArg() > 0 {
+		configFile = flag.Arg(0)
+	}
+	
+	config, err := irc.LoadConfig(configFile)
 	if err != nil {
 		fmt.Println (err)
 		return

@@ -47,7 +47,7 @@ func main() {
 
 		go testNotify(client)
 		client.NotifyCallback(func(msg *irc.Message) { testCallback (client, msg); });
-		
+
 		go func(idx int) {
 			client.Loop()
 			if (err != nil) {

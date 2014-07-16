@@ -16,7 +16,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"strings"
 )
 
 const (
@@ -27,7 +26,7 @@ const (
 
 type IRC struct {
 	config ServerConfig
-	
+
 	conn bool
 	sock net.Conn
 	r *textproto.Reader
@@ -37,13 +36,6 @@ type IRC struct {
 }
 
 type IrcCallback func(msg *Message);
-
-type Message struct {
-	Type string
-	From *string
-	To *string
-	Content *string
-}
 
 func NewIRC(config ServerConfig) *IRC {
 	return &IRC { config: config }
@@ -70,70 +62,54 @@ func (irc *IRC) notify(cmd *Message) {
 	}
 }
 
+func register_nick(irc *IRC) {
+	irc.Send("NICK %s", irc.config.Nickname)
+	irc.Send("USER %s 0 * :Stocazzo", irc.config.Nickname)
+}
+
 func (irc *IRC) Loop() error {
-	var cmd string
 
 	if (!irc.conn) {
 		return errors.New("not connected")
 	}
 
-	irc.Send("NICK %s", irc.config.Nickname)
-	irc.Send("USER %s 0 * :Stocazzo", irc.config.Nickname)
+	register_nick(irc);
 
 	for {
 		line, err := irc.r.ReadLine()
 		if err != nil {
 			return err
 		}
-		
+
 		fmt.Println(line)
 
-		resp := strings.Split(line, " ")
-
-		var from *string
-		var to *string
-		var content *string
-		
-		/* FIXME: */
-		if (resp[0][0] == ':' && len(resp) > 1) {
-			cmd = resp[1]
-			from = &resp[0]
-			to = &resp[2]
-			if len(resp) >= 4 {
-				content = &resp[3]
-			} else {
-				content = nil
-			}
-		} else {
-			cmd = resp[0]
-			from = nil
-			to = nil
-			content = &resp[1]
+		msg, err := ParseMessage(line)
+		if (err != nil) {
+			fmt.Println(err)
 		}
 
-		if (cmd == "PING") {
-			if irc.config.AutoPing {
-				irc.Send("PONG %s", *content)
-			}
-		} else if (cmd == "001") {
-			for _, name := range irc.config.AutoJoin {
-				irc.Send("JOIN %s", name)
-			}
-		} else if (cmd == "443") {
-			/* Duplicated NICK */
-		} else {
-			cmd := Message { cmd, from, to, content }
-			irc.notify(&cmd)
+		switch msg.Command {
+			case "PING":
+				if irc.config.AutoPing {
+					irc.Send("PONG %s", msg.Trailing)
+				}
+			case "001": /* Welcome */
+				for _, name := range irc.config.AutoJoin {
+					irc.Send("JOIN %s", name)
+				}
+			case "443": /* Duplicated NICK */
+				irc.config.Nickname = irc.config.Nickname + "_"
+				register_nick(irc);
+			default:
+				irc.notify(msg)
 		}
-
-		/* TODO: add more commands */
 	}
 
 	return nil
 }
 
 func (irc *IRC) Disconnect() {
-	irc.Send("QUIT against")
+	irc.Send("QUIT :against")
 	irc.sock.Close()
 }
 
@@ -153,7 +129,7 @@ func (irc *IRC) Connect() error {
 	if (err == nil) {
 		irc.conn = true
 		irc.r = textproto.NewReader(bufio.NewReader(irc.sock))
-		irc.w = textproto.NewWriter(bufio.NewWriter(irc.sock))		
+		irc.w = textproto.NewWriter(bufio.NewWriter(irc.sock))
 	}
 
 	return err

@@ -55,7 +55,7 @@ func main() {
 		i++
 	}
 
-	for i = 0; i < len(config.Servers); i++ {
+	for i, _ := range config.Servers {
 		<- quitChans[i]
 	}
 }

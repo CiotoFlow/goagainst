@@ -94,6 +94,8 @@ func (irc *IRC) registerNick() {
 	}
 
 	c := irc.StartMachine()
+	defer irc.StopMachine(c)
+	
 	reg()
 	for {
 		msg := <- c
@@ -106,6 +108,21 @@ func (irc *IRC) registerNick() {
 		}
 	}
 	irc.StopMachine(c)
+}
+
+func (irc *IRC) autoJoin() {
+	c := irc.StartMachine()
+	defer irc.StopMachine(c)
+	
+	for {
+		msg := <- c
+		if msg.Command == "001" {
+			// welcome
+			for _, name := range irc.config.AutoJoin {
+				irc.Send("JOIN %s", name)
+			}
+		}
+	}
 }
 
 func (irc *IRC) autoPong() {
@@ -129,7 +146,7 @@ func (irc *IRC) Loop() error {
 	if irc.config.AutoPong {
 		go irc.autoPong()
 	}
-	
+	go irc.autoJoin()
 
 	for {
 		line, err := irc.r.ReadLine()
@@ -145,21 +162,10 @@ func (irc *IRC) Loop() error {
 			continue
 		}
 
-		irc.handleMessage(msg)
 		irc.notify(msg)
 	}
 
 	return nil
-}
-
-func (irc *IRC) handleMessage(msg *Message) {
-	switch msg.Command {
-	case "001":
-		/* Welcome */
-		for _, name := range irc.config.AutoJoin {
-			irc.Send("JOIN %s", name)
-		}
-	}
 }
 
 func (irc *IRC) Disconnect() {

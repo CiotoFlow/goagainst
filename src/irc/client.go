@@ -99,6 +99,7 @@ func (irc *IRC) registerNick() {
 			nick = nick+"_"
 			reg()
 		} else if msg.Command == "MODE" && msg.Prefix == nick && msg.Params[0] == nick {
+			// FIXME: may crash, no null check
 			irc.Nickname = nick
 			irc.Mode = msg.Trailing
 			fmt.Println("Registered as", irc.Nickname, "with mode", irc.Mode)
@@ -151,8 +152,6 @@ func (irc *IRC) Loop() error {
 		if err != nil {
 			return err
 		}
-
-		fmt.Println(line)
 
 		msg, err := ParseMessage(line)
 		if (err != nil) {

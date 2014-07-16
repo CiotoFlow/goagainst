@@ -12,6 +12,25 @@ type Message struct {
 	Trailing string
 }
 
+func (msg *Message) String() string {
+	s := ""
+	if (msg.Prefix != "") {
+		s = ":" + msg.Prefix + " "
+	}
+
+	s += msg.Command
+
+	for _, p := range(msg.Params) {
+		s += " " + p
+	}
+
+	if msg.Trailing != "" {
+		s += " :" + msg.Trailing
+	}
+	
+	return s
+}
+
 func ParseMessage(line string) (*Message, error) {
 	var prefixEnd, trailingStart int
 	var msg Message
@@ -24,6 +43,7 @@ func ParseMessage(line string) (*Message, error) {
 			return nil, errors.New("Invalid message")
 		}
 	} else {
+		msg.Prefix = ""
 		prefixEnd = -1
 	}
 
@@ -31,6 +51,7 @@ func ParseMessage(line string) (*Message, error) {
 	if (trailingStart >= 0) {
 		msg.Trailing = line[trailingStart + 2:]
 	} else {
+		msg.Trailing = ""
 		trailingStart = len(line)
 	}
 

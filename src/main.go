@@ -32,6 +32,11 @@ func main() {
 			continue
 		}
 
+		f := func(msg *irc.Message) {
+			fmt.Println (msg)
+		}
+		client.NotifyCallback (&f);
+		
 		go func(idx int) {
 			client.Loop()
 			if (err != nil) {

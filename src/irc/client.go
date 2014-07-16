@@ -105,7 +105,6 @@ func (irc *IRC) registerNick() {
 			break
 		}
 	}
-	irc.StopMachine(c)
 }
 
 func (irc *IRC) autoJoin() {

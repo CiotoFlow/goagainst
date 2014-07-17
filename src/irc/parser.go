@@ -3,42 +3,46 @@ package irc
 import (
 	"errors"
 	"strings"
+	"fmt"
 )
 
-type User struct {
-	Nickname string
-	Username string
-	Hostname string
+type Entity interface {
+	isEntity()
 }
 
-type EntityType int
-
-const (
-	INVALID EntityType = iota
-	UNKNOWN
-	SERVER
-	USER
-	CHANNEL
-)
-
-type Entity struct {
-	Type EntityType
+type Server struct {
 	Name string
-	// Only for users
-	User string
+}
+
+func (e *Server) isEntity() {}
+
+func (e *Server) String() string {
+	return e.Name
+}
+
+type Unknown struct {
+}
+
+func (e *Unknown) String() string {
+	return "(unknown)"
+}
+
+func (e *Unknown) isEntity() {}
+
+type User struct {
+	Nick string
+	Name string
 	Host string
 }
 
-func (e *Entity) String() string {
-	if e.Type == USER {
-		return e.Name + "!" + e.User + "@" + e.Host
-	} else {
-		return e.Name
-	}
+func (e User) isEntity() {}
+
+func (e *User) String() string {
+	return e.Nick + "!" + e.Name + "@" + e.Host
 }
 
 type Message struct {
-	Entity *Entity // Must never be null
+	Entity Entity // Must never be null
 	Command string
 	Params []string
 	Trailing string
@@ -46,8 +50,9 @@ type Message struct {
 
 func (msg *Message) String() string {
 	s := ""
-	if msg.Entity.Type != UNKNOWN {
-		s = ":" + msg.Entity.String() + " "
+	_, ok := msg.Entity.(*Unknown)
+	if !ok {
+		s = ":" + msg.Entity.(fmt.Stringer).String() + " "
 	}
 
 	s += msg.Command
@@ -100,24 +105,20 @@ func ParseMessage(line string) (*Message, error) {
 		msg.Params = middle[1:]
 	}
 
-	msg.Entity = new(Entity)
-	msg.Entity.Type = UNKNOWN
 	if len(prefix) > 0 {
 		bangIndex := strings.Index(prefix, "!")
 		if bangIndex >= 0 {
-			msg.Entity.Type = USER
-			msg.Entity.Name = prefix[0:bangIndex]
-			
 			atIndex := strings.Index(prefix[bangIndex+1:], "@")
 			if atIndex >= 0 {
-				msg.Entity.User = prefix[bangIndex+1:bangIndex+atIndex+1]
-				msg.Entity.Host = prefix[bangIndex+atIndex+2:]
+				msg.Entity = &User{
+					prefix[0:bangIndex],
+					prefix[bangIndex+1:bangIndex+atIndex+1],
+					prefix[bangIndex+atIndex+2:]}
 			} else {
 				return nil, errors.New("Invalid prefix: "+prefix)
 			}
 		} else {
-			msg.Entity.Type = SERVER
-			msg.Entity.Name = prefix
+			msg.Entity = &Server{prefix}
 		}
 	}
 

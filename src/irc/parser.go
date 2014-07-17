@@ -14,7 +14,8 @@ type User struct {
 type EntityType int
 
 const (
-	UNKNOWN EntityType = iota
+	INVALID EntityType = iota
+	UNKNOWN
 	SERVER
 	USER
 	CHANNEL
@@ -29,15 +30,15 @@ type Entity struct {
 }
 
 func (e *Entity) String() string {
-	if e.Type == SERVER || e.Type == CHANNEL {
-		return e.Name
-	} else {
+	if e.Type == USER {
 		return e.Name + "!" + e.User + "@" + e.Host
+	} else {
+		return e.Name
 	}
 }
 
 type Message struct {
-	Entity *Entity
+	Entity *Entity // Must never be null
 	Command string
 	Params []string
 	Trailing string
@@ -45,7 +46,7 @@ type Message struct {
 
 func (msg *Message) String() string {
 	s := ""
-	if (msg.Entity != nil && msg.Entity.Type != UNKNOWN) {
+	if msg.Entity.Type != UNKNOWN {
 		s = ":" + msg.Entity.String() + " "
 	}
 
@@ -63,18 +64,19 @@ func (msg *Message) String() string {
 }
 
 func ParseMessage(line string) (*Message, error) {
+	var prefix string
 	var prefixEnd, trailingStart int
 	var msg Message
 
 	if strings.HasPrefix(line, ":") {
 		prefixEnd = strings.Index(line, " ")
 		if (prefixEnd >= 0) {
-			msg.Prefix = line[1:prefixEnd]
+			prefix = line[1:prefixEnd]
 		} else {
 			return nil, errors.New("Invalid message")
 		}
 	} else {
-		msg.Prefix = ""
+		prefix = ""
 		prefixEnd = -1
 	}
 
@@ -98,23 +100,24 @@ func ParseMessage(line string) (*Message, error) {
 		msg.Params = middle[1:]
 	}
 
-	msg.Entity = UNKNOWN
-	if len(msg.Prefix) > 0 {
-		bangIndex = strings.Index(msg.Prefix, "!")
+	msg.Entity = new(Entity)
+	msg.Entity.Type = UNKNOWN
+	if len(prefix) > 0 {
+		bangIndex := strings.Index(prefix, "!")
 		if bangIndex >= 0 {
 			msg.Entity.Type = USER
-			msg.Entity.Name = msg.Prefix[0:bangIndex]
+			msg.Entity.Name = prefix[0:bangIndex]
 			
-			atIndex = strings.Index(msg.Prefix[bangIndex+1:], "@")
+			atIndex := strings.Index(prefix[bangIndex+1:], "@")
 			if atIndex >= 0 {
-				msg.Entity.User = msg.Prefix[bangIndex+1:atIndex]
-				msg.Entity.Host = msg.Prefix[atIndex+1:]
+				msg.Entity.User = prefix[bangIndex+1:bangIndex+atIndex+1]
+				msg.Entity.Host = prefix[bangIndex+atIndex+2:]
 			} else {
-				return nil, errors.New("Invalid prefix %s", msg.Prefix)
+				return nil, errors.New("Invalid prefix: "+prefix)
 			}
 		} else {
 			msg.Entity.Type = SERVER
-			msg.Entity.Name = msg.Prefix
+			msg.Entity.Name = prefix
 		}
 	}
 

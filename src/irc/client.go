@@ -102,7 +102,7 @@ func (irc *IRC) registerNick() {
 		if msg.Command == "443" {
 			nick = nick+"_"
 			reg()
-		} else if msg.Command == "MODE" && msg.Prefix == nick && msg.Params[0] == nick {
+		} else if msg.Command == "MODE" && msg.Entity.Type == SERVER && msg.Entity.Name == nick && msg.Params[0] == nick {
 			// FIXME: may crash, no null check
 			irc.Nickname = nick
 			irc.Mode = msg.Trailing

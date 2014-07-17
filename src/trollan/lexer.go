@@ -104,6 +104,36 @@ func (l *Lexer) nextTokenReal() (tok *Token, err error) {
 		tok.Val = string(strTok)
 	}
 
+	if unicode.IsDigit(b) {
+		strTok := make([]rune, 30)
+		tok.Pos = l.pos
+		var foundDot bool
+
+		for {
+
+			strTok = append(strTok, b)
+			l.pos.Offset++
+
+			b, err = l.nextRune()
+			if b == 0 || err != nil {
+				break
+			} else if b == '.' {
+				if foundDot {
+					l.ahead = append(l.ahead, b)
+					break
+				} else {
+					foundDot = true
+				}
+			} else if !unicode.IsDigit(b) {
+				l.ahead = append(l.ahead, b)
+				break;
+			}
+			tok.Type = TOK_FLOAT
+			tok.Val = string(strTok)
+		}
+		
+	}
+
 	return
 }
 

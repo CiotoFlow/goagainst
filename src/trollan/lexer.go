@@ -3,6 +3,7 @@ package trollan
 import "bufio"
 import "unicode"
 import "io"
+import "strconv"
 //import "fmt"
 
 type Pos struct {
@@ -27,6 +28,7 @@ const (
 	TOK_EOF TokenType = iota
 	TOK_ID
 	TOK_STR
+	TOK_INT
 	TOK_FLOAT
 )
 
@@ -86,7 +88,7 @@ func (l *Lexer) nextTokenReal() (tok *Token, err error) {
 	}
 
 	if unicode.IsLetter(b) {
-		strTok := make([]rune, 30)
+		strTok := make([]rune, 0)
 		tok.Pos = l.pos
 		for {
 			strTok = append(strTok, b);
@@ -102,10 +104,8 @@ func (l *Lexer) nextTokenReal() (tok *Token, err error) {
 		}
 		tok.Type = TOK_ID
 		tok.Val = string(strTok)
-	}
-
-	if unicode.IsDigit(b) {
-		strTok := make([]rune, 30)
+	} else if unicode.IsDigit(b) {
+		strTok := make([]rune, 0)
 		tok.Pos = l.pos
 		var foundDot bool
 
@@ -128,10 +128,15 @@ func (l *Lexer) nextTokenReal() (tok *Token, err error) {
 				l.ahead = append(l.ahead, b)
 				break;
 			}
-			tok.Type = TOK_FLOAT
-			tok.Val = string(strTok)
 		}
-		
+
+		if foundDot {
+			tok.Type = TOK_FLOAT
+			tok.Val, err = strconv.ParseFloat(string(strTok), 64)
+		} else {
+			tok.Type = TOK_INT
+			tok.Val, err = strconv.ParseInt(string(strTok), 10, 64)
+		}		
 	}
 
 	return

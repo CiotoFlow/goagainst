@@ -18,6 +18,10 @@ import (
 	"net"
 )
 
+const (
+	RPL_TOPIC = "332"
+)
+
 type IRC struct {
 	config ServerConfig
 	Nickname string
@@ -135,6 +139,9 @@ func (irc *IRC) autoPong() {
 	irc.NotifyCallback (&f)
 }
 
+func (irc *IRC) handleState(msg *Message) {
+}
+
 func (irc *IRC) Loop() error {
 
 	if (!irc.conn) {
@@ -146,6 +153,8 @@ func (irc *IRC) Loop() error {
 		go irc.autoPong()
 	}
 	go irc.autoJoin()
+	f := func(msg *Message) { irc.handleState(msg) }
+	irc.NotifyCallback (&f)
 
 	for {
 		line, err := irc.r.ReadLine()

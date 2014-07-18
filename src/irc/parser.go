@@ -3,44 +3,7 @@ package irc
 import (
 	"errors"
 	"strings"
-	"fmt"
 )
-
-type Entity interface {
-	isEntity()
-	fmt.Stringer
-}
-
-type Server struct {
-	Name string
-}
-
-func (e *Server) isEntity() {}
-
-func (e *Server) String() string {
-	return e.Name
-}
-
-type Unknown struct {
-}
-
-func (e *Unknown) String() string {
-	return "(unknown)"
-}
-
-func (e *Unknown) isEntity() {}
-
-type User struct {
-	Nick string
-	Name string
-	Host string
-}
-
-func (e User) isEntity() {}
-
-func (e *User) String() string {
-	return e.Nick + "!" + e.Name + "@" + e.Host
-}
 
 type Message struct {
 	Entity Entity // Must never be null

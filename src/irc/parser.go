@@ -12,6 +12,14 @@ type Message struct {
 	Trailing string
 }
 
+func (msg *Message) Param(n int) string {
+	if n < len(msg.Params) {
+		return msg.Params[n]
+	} else {
+		return ""
+	}
+}
+
 func (msg *Message) String() string {
 	s := ""
 	if !IsUnknown(msg.Entity) {

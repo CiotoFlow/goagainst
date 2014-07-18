@@ -17,6 +17,11 @@ func (e *Unknown) String() string {
 
 func (e *Unknown) isEntity() {}
 
+func IsUnknown(e Entity) bool {
+	_, unknown := e.(*Unknown)
+	return unknown
+}
+
 /* Server */
 
 type Server struct {
@@ -28,6 +33,11 @@ func (e *Server) String() string {
 }
 
 func (e *Server) isEntity() {}
+
+func IsServer(e Entity) bool {
+	_, server := e.(*Server)
+	return server
+}
 
 /* User */
 
@@ -56,10 +66,3 @@ func (e *Channel) String() string {
 }
 
 func (e *Channel) isEntity() {}
-
-/* Utils */
-
-func IsUnknown(e Entity) bool {
-	_, unknown := e.(*Unknown)
-	return unknown
-}

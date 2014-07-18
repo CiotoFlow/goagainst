@@ -19,7 +19,8 @@ import (
 )
 
 const (
-	RPL_TOPIC = "332"
+	RPL_TOPIC = "332";
+	RPL_NAMREPLY = "353"
 )
 
 type IRC struct {
@@ -27,6 +28,8 @@ type IRC struct {
 	Nickname string
 	Mode string
 
+	Users []Entity
+	
 	conn bool
 	sock net.Conn
 	r *textproto.Reader
@@ -102,10 +105,9 @@ func (irc *IRC) registerNick() {
 		if msg.Command == "443" {
 			nick = nick+"_"
 			reg()
-		} else if msg.Command == "MODE" && msg.Params[0] == nick {
+		} else if msg.Command == "MODE" && msg.Param(0) == nick {
 			server, ok := msg.Entity.(*Server)
 			if ok && server.Name == nick {
-				// FIXME: may crash, no null check
 				irc.Nickname = nick
 				irc.Mode = msg.Trailing
 				fmt.Println("Registered as", irc.Nickname, "with mode", irc.Mode)
@@ -143,6 +145,12 @@ func (irc *IRC) autoPong() {
 }
 
 func (irc *IRC) handleState(msg *Message) {
+	if (msg.Command == RPL_NAMREPLY && IsServer(msg.Entity) && msg.Param(0) == irc.Nickname) {
+		access := msg.Param(1)
+		name := msg.Param(2)
+		nicks := msg.Trailing
+		fmt.Println ("Access:", access, "Name:", name, "Users:", nicks);
+	}
 }
 
 func (irc *IRC) Loop() error {

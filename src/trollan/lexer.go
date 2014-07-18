@@ -69,7 +69,7 @@ func (l *Lexer) nextRune() (b rune, err error) {
 	return
 }
 
-func (l *Lexer) NextToken() (tok *Token, err error) {
+func (l *Lexer) NextToken() (tok Token, err error) {
 	tok, err = l.nextTokenReal()
 	if err == io.EOF {
 		err = nil
@@ -77,8 +77,8 @@ func (l *Lexer) NextToken() (tok *Token, err error) {
 	return
 }
 
-func (l *Lexer) nextTokenReal() (tok *Token, err error) {
-	tok = new(Token)
+func (l *Lexer) nextTokenReal() (tok Token, err error) {
+	tok = Token{}
 	tok.Type = TOK_EOF
 	var b rune
 
@@ -112,7 +112,6 @@ func (l *Lexer) nextTokenReal() (tok *Token, err error) {
 		var foundDot bool
 
 		for {
-
 			strTok = append(strTok, b)
 			l.pos.Offset++
 

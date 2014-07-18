@@ -77,6 +77,10 @@ func (l *Lexer) NextToken() (tok Token, err error) {
 	return
 }
 
+func (l *Lexer) pushAhead(b rune) {
+	l.ahead = append(l.ahead, b)
+}	
+
 func (l *Lexer) nextTokenReal() (tok Token, err error) {
 	tok = Token{}
 	tok.Type = TOK_EOF
@@ -100,7 +104,7 @@ func (l *Lexer) nextTokenReal() (tok Token, err error) {
 			if b == 0 || err != nil {
 				break
 			} else if !(unicode.IsLetter(b) || b == '_' || unicode.IsDigit(b)) {
-				l.ahead = append(l.ahead, b)
+				l.pushAhead(b)
 				break
 			}
 		}
@@ -120,13 +124,13 @@ func (l *Lexer) nextTokenReal() (tok Token, err error) {
 				break
 			} else if b == '.' {
 				if foundDot {
-					l.ahead = append(l.ahead, b)
+					l.pushAhead(b)
 					break
 				} else {
 					foundDot = true
 				}
 			} else if !unicode.IsDigit(b) {
-				l.ahead = append(l.ahead, b)
+				l.pushAhead(b)
 				break;
 			}
 		}

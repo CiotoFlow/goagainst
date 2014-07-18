@@ -41,7 +41,7 @@ func ParseMessage(line string) (*Message, error) {
 		if (prefixEnd >= 0) {
 			prefix = line[1:prefixEnd]
 		} else {
-			return nil, errors.New("Invalid message")
+			return nil, errors.New("Invalid message: "+line)
 		}
 	} else {
 		prefix = ""
@@ -59,7 +59,7 @@ func ParseMessage(line string) (*Message, error) {
 	middle := strings.Split(line[prefixEnd+1:trailingStart], " ")
 
 	if len(middle) < 1 {
-		return nil, errors.New("Invalid message")
+		return nil, errors.New("Invalid message: "+line)
 	}
 
 	msg.Command = middle[0]

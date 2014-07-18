@@ -167,11 +167,3 @@ func (l *Lexer) nextTokenReal() (tok Token, err error) {
 
 	return
 }
-
-func (t *Token) StringVal() string {
-	return t.Val.(string)
-}
-
-func (t *Token) DoubleVal() float64 {
-	return t.Val.(float64)
-}

@@ -8,6 +8,7 @@ import (
 
 type Entity interface {
 	isEntity()
+	fmt.Stringer
 }
 
 type Server struct {
@@ -50,9 +51,9 @@ type Message struct {
 
 func (msg *Message) String() string {
 	s := ""
-	_, ok := msg.Entity.(*Unknown)
-	if !ok {
-		s = ":" + msg.Entity.(fmt.Stringer).String() + " "
+	_, unknown := msg.Entity.(*Unknown)
+	if !unknown {
+		s = ":" + msg.Entity.String() + " "
 	}
 
 	s += msg.Command

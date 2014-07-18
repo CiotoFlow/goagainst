@@ -26,6 +26,6 @@ func TestSimple(t *testing.T) {
 
 	tok, err = l.NextToken()
 	if err != nil { t.Errorf(err.Error()) }
-	if !(tok.Type == TOK_STR && tok.Val == "test string") { t.Errorf("%s", tok) }
+	if !(tok.Type == TOK_STR && tok.Val == "test string") { t.Errorf("%s", tok.Val) }
 
 }

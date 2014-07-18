@@ -141,7 +141,6 @@ func (l *Lexer) nextTokenReal() (tok Token, err error) {
 	} else if b == '"' {
 		strTok := make([]rune, 0)
 		tok.Pos = l.pos
-		var foundTerminator bool
 		
 		for {
 			b, err = l.nextRune()
@@ -149,15 +148,15 @@ func (l *Lexer) nextTokenReal() (tok Token, err error) {
 			
 			if b == 0 || err != nil {
 				break
-			} else if foundTerminator {
-				l.ahead = append(l.ahead, b)
-			}else if b == '"' {
-				foundTerminator = true
+			} else if b == '"' {
+				l.nextRune()
+				break
 			} else {
 				strTok = append(strTok, b)
 			}
 
 		}
+		
 		tok.Type = TOK_STR
 		tok.Val = string(strTok)
 	}

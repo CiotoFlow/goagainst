@@ -23,11 +23,11 @@ type Server struct {
 	Name string
 }
 
-func (e *Server) isEntity() {}
-
 func (e *Server) String() string {
 	return e.Name
 }
+
+func (e *Server) isEntity() {}
 
 /* User */
 
@@ -35,13 +35,14 @@ type User struct {
 	Nick string
 	Name string
 	Host string
+	Valid bool
 }
-
-func (e *User) isEntity() {}
 
 func (e *User) String() string {
 	return e.Nick + "!" + e.Name + "@" + e.Host
 }
+
+func (e *User) isEntity() {}
 
 /* Channel */
 
@@ -50,8 +51,15 @@ type Channel struct {
 	Users []*User
 }
 
-func (e *Channel) isEntity() {}
-
 func (e *Channel) String() string {
 	return e.Name
+}
+
+func (e *Channel) isEntity() {}
+
+/* Utils */
+
+func IsUnknown(e Entity) bool {
+	_, unknown := e.(*Unknown)
+	return unknown
 }

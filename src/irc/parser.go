@@ -14,8 +14,7 @@ type Message struct {
 
 func (msg *Message) String() string {
 	s := ""
-	_, unknown := msg.Entity.(*Unknown)
-	if !unknown {
+	if !IsUnknown(msg.Entity) {
 		s = ":" + msg.Entity.String() + " "
 	}
 
@@ -77,7 +76,9 @@ func ParseMessage(line string) (*Message, error) {
 				msg.Entity = &User{
 					prefix[0:bangIndex],
 					prefix[bangIndex+1:bangIndex+atIndex+1],
-					prefix[bangIndex+atIndex+2:]}
+					prefix[bangIndex+atIndex+2:],
+					true,
+				}
 			} else {
 				return nil, errors.New("Invalid prefix: "+prefix)
 			}

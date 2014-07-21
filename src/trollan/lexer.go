@@ -4,7 +4,7 @@ import "bufio"
 import "unicode"
 import "io"
 import "strconv"
-//import "fmt"
+/* import "fmt" */
 
 type Pos struct {
 	Offset int
@@ -81,13 +81,10 @@ func (l *Lexer) pushAhead(b rune) {
 	l.ahead = append(l.ahead, b)
 }
 
-func checkOper(k rune) (res bool) {
-	if !(k == '+' || k == '-' || k == '*' ||
-		k == '/' || k == '>' || k == '<' ||
-		k == '=') {
-		res = true
-	}
-	return
+func checkOper(k rune) bool {
+	return k == '+' || k == '-' || k == '*' ||
+	  k == '/' || k == '>' || k == '<' ||
+	  k == '='
 }
 
 func (l *Lexer) nextTokenReal() (tok Token, err error) {
@@ -173,25 +170,18 @@ func (l *Lexer) nextTokenReal() (tok Token, err error) {
 		tok.Type = TOK_STR
 		tok.Val = string(strTok)
 	} else if checkOper(b) {
-		strTok := make([]rune, 0)
 		tok.Pos = l.pos
-		var prev rune
+		tok.Type = TOK_OPER
+		tok.Val = string(b)
 
-		strTok = append(strTok, b)
-		prev = b
 		b, err = l.nextRune()
-
 		if b == 0 || err != nil {
 			return
-		} else if !checkOper(b) {
-			l.pushAhead(b)
-		} else if (b == prev && (b != '*' || b != '/' || b != '=')) {
-			strTok = append(strTok, b)
+		} else if checkOper(b) {
+			tok.Val = tok.Val.(string)+string(b)
+		} else {
+			l.pushAhead (b)
 		}
-		
-		tok.Type = TOK_OPER
-		tok.Val = string(strTok)
-		
 	}
 
 	return

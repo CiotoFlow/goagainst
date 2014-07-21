@@ -87,6 +87,13 @@ func checkOper(k rune) bool {
 	  k == '='
 }
 
+func checkSym(k rune) bool {
+	return k == '[' || k == ']' || k == '(' ||
+		k == ')' || k == '{' || k == '}' ||
+		k == '.' || k == ';' || k == ':' ||
+		k == ','
+}
+
 func (l *Lexer) nextTokenReal() (tok Token, err error) {
 	tok = Token{}
 	tok.Type = TOK_EOF
@@ -180,9 +187,12 @@ func (l *Lexer) nextTokenReal() (tok Token, err error) {
 		} else if checkOper(b) {
 			tok.Val = tok.Val.(string)+string(b)
 		} else {
-			l.pushAhead (b)
+			l.pushAhead(b)
 		}
+	} else if checkSym(b) {
+			tok.Pos = l.pos
+			tok.Type = TOK_SPECIAL
+			tok.Val = string(b)
 	}
-
 	return
 }

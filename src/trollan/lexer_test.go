@@ -5,7 +5,7 @@ import "bufio"
 import "strings"
 
 func TestSimple(t *testing.T) {
-	buf := strings.NewReader("test_test test123 1234 1234.12 \"test string\" * **")
+	buf := strings.NewReader("test_test test123 1234 1234.12 \"test string\" * ** [")
 	l := NewLexer (bufio.NewReader (buf))
 
 	tok, err := l.NextToken()
@@ -35,5 +35,9 @@ func TestSimple(t *testing.T) {
 	tok, err = l.NextToken()
 	if err != nil { t.Errorf(err.Error()) }
 	if !(tok.Type == TOK_OPER && tok.Val == "**") { t.Errorf("%s", tok.Val) }
+
+	tok, err = l.NextToken()
+	if err != nil { t.Errorf(err.Error()) }
+	if !(tok.Type == TOK_SPECIAL && tok.Val == "[") { t.Errorf("%s", tok.Val) }
 
 }

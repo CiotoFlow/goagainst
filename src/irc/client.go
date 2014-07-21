@@ -16,6 +16,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"strings"
 )
 
 const (
@@ -28,7 +29,8 @@ type IRC struct {
 	Nickname string
 	Mode string
 
-	Users []Entity
+	Channels []Channel
+	Users []User
 	
 	conn bool
 	sock net.Conn
@@ -144,12 +146,40 @@ func (irc *IRC) autoPong() {
 	irc.NotifyCallback (&f)
 }
 
+func (irc *IRC) GetChannel(name string) *Channel {
+	for _, c := range(irc.Channels) {
+		if c.Name == name {
+			return &c
+		}
+	}
+	c := Channel{name, []*User{}}
+	irc.Channels = append(irc.Channels, c)
+	return &c
+}
+
+func (irc *IRC) GetUser(nick string) *User {
+	for _, u := range(irc.Users) {
+		if u.Nick == nick {
+			return &u
+		}
+	}
+	u := User{nick, "", "", false}
+	irc.Users = append(irc.Users, u)
+	return &u
+}
+
 func (irc *IRC) handleState(msg *Message) {
 	if (msg.Command == RPL_NAMREPLY && IsServer(msg.Entity) && msg.Param(0) == irc.Nickname) {
-		access := msg.Param(1)
 		name := msg.Param(2)
-		nicks := msg.Trailing
-		fmt.Println ("Access:", access, "Name:", name, "Users:", nicks);
+		channel := irc.GetChannel(name)
+		nicks := strings.Split(msg.Trailing, " ")
+		channel.Users = make([]*User, len(nicks))
+		for i, nick := range(nicks) {
+			user := irc.GetUser(nick)
+			user.Valid = true
+			channel.Users[i] = user
+		}
+		fmt.Println ("Channel names:", channel.Users)
 	}
 }
 

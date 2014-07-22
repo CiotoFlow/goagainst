@@ -38,6 +38,6 @@ func TestSimple(t *testing.T) {
 
 	tok, err = l.NextToken()
 	if err != nil { t.Errorf(err.Error()) }
-	if !(tok.Type == TOK_SPECIAL && tok.Val == "[") { t.Errorf("%s", tok.Val) }
+	if !(tok.Type == TOK_PUN && tok.Val == "[") { t.Errorf("%s", tok.Val) }
 
 }

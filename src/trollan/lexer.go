@@ -31,7 +31,7 @@ const (
 	TOK_INT
 	TOK_FLOAT
 	TOK_OPER
-	TOK_SPECIAL
+	TOK_PUN
 )
 
 type Token struct {
@@ -81,13 +81,13 @@ func (l *Lexer) pushAhead(b rune) {
 	l.ahead = append(l.ahead, b)
 }
 
-func checkOper(k rune) bool {
+func isOper(k rune) bool {
 	return k == '+' || k == '-' || k == '*' ||
 	  k == '/' || k == '>' || k == '<' ||
 	  k == '='
 }
 
-func checkSym(k rune) bool {
+func isPun(k rune) bool {
 	return k == '[' || k == ']' || k == '(' ||
 		k == ')' || k == '{' || k == '}' ||
 		k == '.' || k == ';' || k == ':' ||
@@ -176,7 +176,7 @@ func (l *Lexer) nextTokenReal() (tok Token, err error) {
 		
 		tok.Type = TOK_STR
 		tok.Val = string(strTok)
-	} else if checkOper(b) {
+	} else if isOper(b) {
 		tok.Pos = l.pos
 		tok.Type = TOK_OPER
 		tok.Val = string(b)
@@ -184,15 +184,15 @@ func (l *Lexer) nextTokenReal() (tok Token, err error) {
 		b, err = l.nextRune()
 		if b == 0 || err != nil {
 			return
-		} else if checkOper(b) {
+		} else if isOper(b) {
 			tok.Val = tok.Val.(string)+string(b)
 		} else {
 			l.pushAhead(b)
 		}
-	} else if checkSym(b) {
-			tok.Pos = l.pos
-			tok.Type = TOK_SPECIAL
-			tok.Val = string(b)
+	} else if isPun(b) {
+		tok.Pos = l.pos
+		tok.Type = TOK_PUN
+		tok.Val = string(b)
 	}
 	return
 }

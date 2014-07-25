@@ -4,7 +4,7 @@ import "testing"
 import "bufio"
 import "strings"
 
-func TestSimple(t *testing.T) {
+func TestLexer(t *testing.T) {
 	buf := strings.NewReader("test_test test123 1234 1234.12 \"test string\" * ** [")
 	l := NewLexer (bufio.NewReader (buf))
 

@@ -6,7 +6,7 @@ let
       
       buildCommand = ''
         ensureDir $out/src/`dirname ${goRoot}`
-        ln -s ${src} $out/src/`dirname ${goRoot}/tiedot`
+        ln -s ${src} $out/src/`dirname ${goRoot}/`
       '';
     };
     
